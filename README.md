@@ -71,10 +71,80 @@ Keychain
 
 ```
 
+### Android
+
+*Note: Android support requires React Native 0.16 or later
+ 
+
+* Edit `android/settings.gradle` to look like this (without the +):
+
+  ```diff
+  rootProject.name = 'MyApp'
+
+  include ':app'
+
+  + include ':react-native-keychain'
+  + project(':react-native-keychain').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-keychain/android')
+  ```
+
+* Edit `android/app/build.gradle` (note: **app** folder) to look like this: 
+
+  ```diff
+  apply plugin: 'com.android.application'
+
+  android {
+    ...
+  }
+
+  dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:23.0.0'
+    compile 'com.facebook.react:react-native:0.16.+'
+  + compile project(':react-native-keychain')
+  }
+  ```
+
+* Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
+
+  ```diff
+  package com.myapp;
+
+  + import com.oblador.keychain.KeychainPackage;
+
+  ....
+
+  public class MainActivity extends Activity implements DefaultHardwareBackBtnHandler {
+
+    private ReactInstanceManager mReactInstanceManager;
+    private ReactRootView mReactRootView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+      super.onCreate(savedInstanceState);
+      mReactRootView = new ReactRootView(this);
+
+      mReactInstanceManager = ReactInstanceManager.builder()
+        .setApplication(getApplication())
+        .setBundleAssetName("index.android.bundle")
+        .setJSMainModuleName("index.android")
+        .addPackage(new MainReactPackage())
+  +     .addPackage(new KeychainPackage())
+        .setUseDeveloperSupport(BuildConfig.DEBUG)
+        .setInitialLifecycleState(LifecycleState.RESUMED)
+        .build();
+
+      mReactRootView.startReactApplication(mReactInstanceManager, "MyApp", null);
+
+      setContentView(mReactRootView);
+    }
+    ...
+  }
+  ```
+
 ## Todo
 
 - [x] iOS support
-- [ ] Android support
+- [x] Android support
 - [ ] Storing objects as JSON
 - [ ] Expose wider selection of underlying native APIs
 
