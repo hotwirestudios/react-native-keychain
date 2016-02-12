@@ -23,13 +23,6 @@ android {
   lintOptions {
     abortOnError false
   }
-
-  sourceSets {
-    main {
-      jniLibs.srcDirs = ['libs']
-    }
-
-  }
 }
 
 repositories {
@@ -37,8 +30,6 @@ repositories {
 }
 
 dependencies {
-  compile 'com.facebook.react:react-native:0.16.+'
-  compile files('libs/conceal_android.jar')
-  compile files('libs/libconceal.jar')
-  //compile 'com.facebook.conceal:conceal:1.0.1@aar'
+  compile 'com.facebook.react:react-native:0.17.+'
+  compile 'com.facebook.conceal:conceal:1.0.3@aar'
 }
