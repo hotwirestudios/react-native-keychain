@@ -5,19 +5,14 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.facebook.android.crypto.keychain.SharedPrefsBackedKeyChain;
-import com.facebook.crypto.Crypto;
+//import com.facebook.crypto.Crypto;
 import com.facebook.crypto.Entity;
-import com.facebook.crypto.exception.CryptoInitializationException;
-import com.facebook.crypto.exception.KeyChainException;
 import com.facebook.crypto.util.SystemNativeCryptoLibrary;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.nio.charset.Charset;
 
 public class KeychainModule extends ReactContextBaseJavaModule {
@@ -119,5 +114,21 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 //
 //    }
 
+    class Crypto {
 
+        public Crypto(SharedPrefsBackedKeyChain aharedPrefsBackedKeyChain, SystemNativeCryptoLibrary systemNativeCryptoLibrary) {
+        }
+
+        public boolean isAvailable() {
+            return true;
+        }
+
+        public byte[] encrypt(byte[] bytes, Entity entity) {
+            return bytes;
+        }
+
+        public byte[] decrypt(byte[] bytes, Entity entity) {
+            return bytes;
+        }
+    }
 }
