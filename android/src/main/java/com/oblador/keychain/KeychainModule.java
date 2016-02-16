@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.facebook.android.crypto.keychain.SharedPrefsBackedKeyChain;
-//import com.facebook.crypto.Crypto;
+import com.facebook.crypto.Crypto;
 import com.facebook.crypto.Entity;
 import com.facebook.crypto.util.SystemNativeCryptoLibrary;
 import com.facebook.react.bridge.Callback;
@@ -72,6 +72,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getGenericPasswordForService(String service, Callback callback) {
+      Log.e("getGenericPasswordForService", service);
 
         String username = prefs.getString(service + ":u", "");
         String password = prefs.getString(service + ":p", "");
@@ -79,12 +80,14 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         Entity entity = new Entity(KEYCHAIN_DATA + ":" + service + ":" + password);
 
         try {
+            Log.e("getGenericPasswordForService", "decrypt" );
             byte[] decryptedUsername = crypto.decrypt(username.getBytes(), entity);
             byte[] decryptedPass = crypto.decrypt(password.getBytes(), entity);
             Log.e("Crypto Decrypted u: ", new String(decryptedUsername));
             Log.e("Crypto Decrypted p: ", new String(decryptedPass));
             callback.invoke(null, new String(decryptedUsername), new String(decryptedPass));
         } catch (Exception e) {
+          Log.e("getGenericPasswordForService",  "decrypt died " + e);
             e.printStackTrace();
             callback.invoke(e);
         }
@@ -114,21 +117,21 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 //
 //    }
 
-    class Crypto {
-
-        public Crypto(SharedPrefsBackedKeyChain aharedPrefsBackedKeyChain, SystemNativeCryptoLibrary systemNativeCryptoLibrary) {
-        }
-
-        public boolean isAvailable() {
-            return true;
-        }
-
-        public byte[] encrypt(byte[] bytes, Entity entity) {
-            return bytes;
-        }
-
-        public byte[] decrypt(byte[] bytes, Entity entity) {
-            return bytes;
-        }
-    }
+    // class Crypto {
+    //
+    //     public Crypto(SharedPrefsBackedKeyChain aharedPrefsBackedKeyChain, SystemNativeCryptoLibrary systemNativeCryptoLibrary) {
+    //     }
+    //
+    //     public boolean isAvailable() {
+    //         return true;
+    //     }
+    //
+    //     public byte[] encrypt(byte[] bytes, Entity entity) {
+    //         return bytes;
+    //     }
+    //
+    //     public byte[] decrypt(byte[] bytes, Entity entity) {
+    //         return bytes;
+    //     }
+    // }
 }
