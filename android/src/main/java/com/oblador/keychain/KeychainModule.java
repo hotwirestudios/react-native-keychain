@@ -2,6 +2,7 @@ package com.oblador.keychain;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Base64;
 import android.util.Log;
 
 import com.facebook.android.crypto.keychain.SharedPrefsBackedKeyChain;
@@ -14,8 +15,7 @@ import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-
-import org.json.JSONObject;
+import com.facebook.react.bridge.WritableNativeMap;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -27,6 +27,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     private final Crypto crypto;
     private final SharedPreferences prefs;
+
+    private final Charset charset = Charset.forName("UTF-8");
 
     @Override
     public String getName() {
@@ -57,22 +59,20 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             prefsEditor.putString(service + ":u", encryptedUsername);
             prefsEditor.putString(service + ":p", encryptedPassword);
             prefsEditor.apply();
-            Log.e("Crypto Encrypted", encryptedUsername +":"+encryptedPassword);
-            callback.invoke(null);
+            callback.invoke(new Object[] {null});
         } catch (Exception e) {
-            callback.invoke(e);
+            e.printStackTrace();
+            callback.invoke(exceptionToErrorObj(e));
         }
     }
 
-    private String encryptWithEntity(String string, Entity entity) {
-        try {
-            byte[] encrypted = new byte[0];
-            byte[] bytes = string.getBytes(Charset.forName("UTF-8"));
-            return new String(crypto.encrypt(bytes, entity));
-        } catch (Exception e) {
-            //callback.invoke(e);
-            return null;
-        }
+    private String encryptWithEntity(String string, Entity entity) throws KeyChainException, CryptoInitializationException, IOException {
+        byte[] bytes = string.getBytes(charset);
+        return Base64.encodeToString(crypto.encrypt(bytes, entity), Base64.DEFAULT);
+    }
+
+    private String decryptWithEntity(String string, Entity entity) throws KeyChainException, CryptoInitializationException, IOException {
+        return new String(crypto.decrypt(Base64.decode(string.getBytes(charset), Base64.DEFAULT), entity), charset);
     }
 
     @ReactMethod
@@ -81,26 +81,43 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         String username = prefs.getString(service + ":u", "");
         String password = prefs.getString(service + ":p", "");
 
-        Entity entity = new Entity(KEYCHAIN_DATA + ":" + service + ":" + password);
+        if (username.isEmpty() || password.isEmpty()) {
+            callback.invoke(new Object[] {null});
+            return;
+        }
+
+        Entity entity = new Entity(KEYCHAIN_DATA + ":" + service);
 
         try {
-            byte[] decryptedUsername = crypto.decrypt(username.getBytes(), entity);
-            byte[] decryptedPass = crypto.decrypt(password.getBytes(), entity);
-            Log.e("Crypto Decrypted u: ", new String(decryptedUsername));
-            Log.e("Crypto Decrypted p: ", new String(decryptedPass));
-            callback.invoke(null, new String(decryptedUsername), new String(decryptedPass));
+            String decryptedUsername = decryptWithEntity(username, entity);
+            String decryptedPass = decryptWithEntity(password, entity);
+
+            callback.invoke(null, decryptedUsername, decryptedPass);
         } catch (Exception e) {
             e.printStackTrace();
-            callback.invoke(e);
+            callback.invoke(exceptionToErrorObj(e));
         }
     }
 
     @ReactMethod
-    public void resetGenericPasswordForService(String service) {
-        SharedPreferences.Editor prefsEditor = prefs.edit();
-        prefsEditor.remove(service + ":u");
-        prefsEditor.remove(service + ":p");
-        prefsEditor.apply();
+    public void resetGenericPasswordForService(String service, Callback callback) {
+        try {
+            SharedPreferences.Editor prefsEditor = prefs.edit();
+            prefsEditor.remove(service + ":u");
+            prefsEditor.remove(service + ":p");
+            prefsEditor.apply();
+            callback.invoke(new Object[] {null});
+        } catch (Exception e) {
+            e.printStackTrace();
+            callback.invoke(exceptionToErrorObj(e));
+        }
+    }
+
+    private WritableNativeMap exceptionToErrorObj(Exception e) {
+        WritableNativeMap map = new WritableNativeMap();
+        map.putString("key", e.getClass().toString());
+        map.putString("message", e.getMessage());
+        return map;
     }
 
 
