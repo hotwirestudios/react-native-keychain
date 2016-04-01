@@ -44,3 +44,10 @@ DerivedData
 *.ipa
 *.xcuserstate
 project.xcworkspace
+
+# Android
+.idea
+.gradle
+local.properties
+*.iml
+
